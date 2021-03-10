@@ -11,33 +11,17 @@ namespace Flex.Net.Sockets
 {
 	public class ClientBehaviour
 	{
-		// Status
-		public bool Reachability {
-			get; protected set;
-		}
-		public string Error {
-			get; protected set;
-		}
-		public string HostName {
-			get; protected set;
-		}
-		public int Port {
-			get; protected set;
-		}
+		// Properties
+		public bool Reachability { get; protected set; }
+		public string HostName { get; protected set; }
+		public int Port { get; protected set; }
+		public string Error { get; protected set; }
 
 		// Initializer
-		public int SendBufferSize {
-			get; private set;
-		} = 1024;
-		public int SendTimeout {
-			get; private set;
-		} = 0;
-		public int ReceiveBufferSize {
-			get; private set;
-		} = 4096;
-		public int ReceiveTimeout {
-			get; private set;
-		} = 0;
+		public int SendBufferSize { get; private set; } = 1024;
+		public int SendTimeout { get; private set; } = 0;
+		public int ReceiveBufferSize { get; private set; } = 4096;
+		public int ReceiveTimeout { get; private set; } = 0;
 
 		// Handler
 		public Action<string> OnError;
@@ -53,13 +37,6 @@ namespace Flex.Net.Sockets
 
 		public ClientBehaviour()
 		{
-			try {
-				var hostName = Dns.GetHostName();
-				var addresses = Dns.GetHostAddresses(hostName);
-				Reachability = addresses.Any(x => x.AddressFamily == AddressFamily.InterNetwork);
-			} catch (Exception e) {
-				Close(e.Message);
-			}
 		}
 
 		public ClientBehaviour(int sendBufferSize, int sendTimeout, int receiveBufferSize, int receiveTimeout) : this()

@@ -11,24 +11,15 @@ namespace Flex.Net.Sockets
 	{
 		#region container
 
+		// Properties
+		public static List<ClientContainer> Connections => connections;
+		public static int Count => connections.Count;
+		public NetworkStream Stream => stream;
+		public SynchronizationContext Context => context;
+		public CancellationTokenSource Token => token;
+
+		// Container List
 		static List<ClientContainer> connections = new List<ClientContainer>();
-
-		public static List<ClientContainer> Connections {
-			get => connections;
-		}
-		public static int Count {
-			get => connections.Count;
-		}
-
-		public NetworkStream Stream {
-			get => stream;
-		}
-		public SynchronizationContext Context {
-			get => context;
-		}
-		public CancellationTokenSource Token {
-			get => token;
-		}
 
 
 		public static ClientContainer Create(TcpClient client, SynchronizationContext context)

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Net.NetworkInformation;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,19 +11,11 @@ namespace Flex.Net.Sockets
 {
 	public class ServerBehaviour
 	{
-		// Status
-		public bool Reachability {
-			get; private set;
-		}
-		public string Error {
-			get; set;
-		}
-		public string HostName {
-			get; private set;
-		}
-		public int Port {
-			get; private set;
-		}
+		// Properties
+		public bool Reachability { get; }
+		public string HostName { get; }
+		public int Port { get; private set; }
+		public string Error { get; protected set; }
 
 		// Handler
 		public Action<string> OnError;
@@ -37,11 +30,16 @@ namespace Flex.Net.Sockets
 		public ServerBehaviour()
 		{
 			try {
-				var hostName = Dns.GetHostName();
-				var addresses = Dns.GetHostAddresses(hostName);
-				Reachability = addresses.Any(x => x.AddressFamily == AddressFamily.InterNetwork);
-				HostName = addresses.Where(x => x.AddressFamily == AddressFamily.InterNetwork)
-									.Select(x => x.ToString()).FirstOrDefault();
+				var address = NIC.IPv4(NetworkInterfaceType.Wireless80211);
+
+				if (string.IsNullOrEmpty(address)) {
+					address = NIC.IPv4(NetworkInterfaceType.Ethernet);
+				}
+
+				if (!string.IsNullOrEmpty(address)) {
+					HostName = address;
+					Reachability = true;
+				}
 			} catch (Exception e) {
 				Close(e.Message);
 			}

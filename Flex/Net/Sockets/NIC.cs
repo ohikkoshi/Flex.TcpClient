@@ -30,6 +30,8 @@ namespace Flex.Net.Sockets
 		{
 			try {
 				var array = NetworkInterface.GetAllNetworkInterfaces();
+				const string LocalLoopbackAddress = "127.0";
+				const string LinkLocalAddress = "169.254.";
 
 				foreach (var nic in array) {
 					if (nic.NetworkInterfaceType == networkInterfaceType) {
@@ -37,7 +39,15 @@ namespace Flex.Net.Sockets
 
 						foreach (var ip in props.UnicastAddresses) {
 							if (ip.Address.AddressFamily == AddressFamily.InterNetwork) {
-								return ip.Address.ToString();
+								var addr = ip.Address.ToString();
+
+								if (string.IsNullOrEmpty(addr) ||
+									addr.StartsWith(LocalLoopbackAddress) ||
+									addr.StartsWith(LinkLocalAddress)) {
+									return null;
+								}
+
+								return addr;
 							}
 						}
 					}

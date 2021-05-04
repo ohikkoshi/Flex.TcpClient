@@ -14,6 +14,7 @@ namespace Flex.Net.Sockets
 		// Properties
 		public bool Reachability { get; }
 		public string HostName { get; }
+		public string ClientName { get; }
 		public int Port { get; private set; }
 		public string Error { get; protected set; }
 
@@ -23,7 +24,6 @@ namespace Flex.Net.Sockets
 
 		// TcpListener
 		TcpListener listener;
-		SynchronizationContext context;
 		CancellationTokenSource token;
 
 
@@ -36,8 +36,14 @@ namespace Flex.Net.Sockets
 					address = NIC.IPv4(NetworkInterfaceType.Ethernet);
 				}
 
+				if (string.IsNullOrEmpty(address)) {
+					address = NIC.IPv4();
+				}
+
 				if (!string.IsNullOrEmpty(address)) {
-					HostName = address;
+					var array = address.Split('.');
+					HostName = $"{array[0]}.{array[1]}.{array[2]}.255";
+					ClientName = address;
 					Reachability = true;
 				}
 			} catch (Exception e) {
@@ -66,8 +72,6 @@ namespace Flex.Net.Sockets
 				token = null;
 			}
 
-			context = null;
-
 			if (listener != null) {
 				listener.Stop();
 				listener = null;
@@ -81,6 +85,7 @@ namespace Flex.Net.Sockets
 			Port = port;
 
 			try {
+				listener?.Stop();
 				listener = new TcpListener(IPAddress.Any, Port);
 				listener.Start();
 			} catch (Exception e) {
@@ -88,9 +93,12 @@ namespace Flex.Net.Sockets
 				return;
 			}
 
-			Log.d($"<color=#00ff00>[Server]:Start({HostName}:{Port}).</color>");
-			context = SynchronizationContext.Current;
+			Log.d($"<color=#00ff00>[Server]:Start({ClientName}:{Port}).</color>");
+
+			token?.Cancel();
 			token = new CancellationTokenSource();
+
+			var context = SynchronizationContext.Current;
 
 			Task.Run(() => {
 				while (!token.IsCancellationRequested) {

@@ -58,7 +58,7 @@ namespace Flex.Net.Sockets
 			#endregion
 		}
 
-		public BinaryClient(	int sendBufferSize,
+		public BinaryClient(int sendBufferSize,
 								int sendTimeout,
 								int receiveBufferSize,
 								int receiveTimeout

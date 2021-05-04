@@ -42,7 +42,7 @@ namespace Flex.Net.Sockets
 			#endregion
 		}
 
-		public AsciiClient(	int sendBufferSize,
+		public AsciiClient(int sendBufferSize,
 							int sendTimeout,
 							int receiveBufferSize,
 							int receiveTimeout

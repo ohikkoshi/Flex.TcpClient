@@ -25,8 +25,8 @@ namespace Flex.Net.Sockets
 
 		// Handler
 		public Action<string> OnError;
-		public Action<Object> OnReceive;
 		public Action OnStream;
+		public Action<Object> OnReceive;
 
 		// TcpClient
 		protected TcpClient client;
@@ -84,13 +84,14 @@ namespace Flex.Net.Sockets
 			}
 		}
 
-		public void Connect(string hostName, int port, bool bindSelf = true)
+		public void Connect(string hostName, int port, bool bindSelf = true, bool noDelay = true)
 		{
 			Debug.Assert(!string.IsNullOrEmpty(hostName));
-			HostName = hostName;
-
 			Debug.Assert(0 <= port && port <= 65535);
+
+			HostName = hostName;
 			Port = port;
+			context = SynchronizationContext.Current;
 
 			Close();
 
@@ -100,12 +101,9 @@ namespace Flex.Net.Sockets
 				client.Client.SendTimeout = SendTimeout;
 				client.Client.ReceiveBufferSize = ReceiveBufferSize;
 				client.Client.ReceiveTimeout = ReceiveTimeout;
-				/*client.Client.EnableBroadcast = false;*/
 				client.Client.ExclusiveAddressUse = !bindSelf;
+				client.Client.NoDelay = noDelay;
 				client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-
-				context = SynchronizationContext.Current;
-
 				client.BeginConnect(HostName, Port, OnConnect, client);
 			} catch (Exception e) {
 				Close(e.Message);
@@ -123,9 +121,10 @@ namespace Flex.Net.Sockets
 				return;
 			}
 
-			stream = tcp.GetStream();
 			token?.Cancel();
 			token = new CancellationTokenSource();
+
+			stream = tcp.GetStream();
 
 			if (OnStream != null) {
 				Task.Run(OnStream, token.Token);
@@ -144,16 +143,18 @@ namespace Flex.Net.Sockets
 
 		public void Send(byte[] data)
 		{
+			if (data == null || data.Length == 0) {
+				return;
+			}
+
 			if (stream == null || !stream.CanWrite) {
 				return;
 			}
 
-			if (data?.Length > 0) {
-				try {
-					stream.WriteAsync(data, 0, data.Length, token.Token);
-				} catch (Exception e) {
-					Close(e.Message);
-				}
+			try {
+				stream.WriteAsync(data, 0, data.Length, token.Token);
+			} catch (Exception e) {
+				Close(e.Message);
 			}
 		}
 	}

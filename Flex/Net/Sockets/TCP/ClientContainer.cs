@@ -29,14 +29,21 @@ namespace Flex.Net.Sockets
 
 		public static void Dispose()
 		{
-			while (connections.Count > 0) {
-				connections[0]?.Close();
-			}
+			if (connections.Count > 0) {
+				foreach (var con in connections) {
+					if (con != null) {
+						con.Close();
+					}
+				}
 
-			connections.Clear();
+				lock (connections) {
+					connections.Clear();
+				}
+			}
 		}
 
 		#endregion
+
 		#region behaviour
 
 		ClientContainer()
@@ -61,7 +68,10 @@ namespace Flex.Net.Sockets
 			this.token = new CancellationTokenSource();
 
 			if (!connections.Contains(this)) {
-				connections.Add(this);
+				lock (connections) {
+					connections.Add(this);
+				}
+
 				Log.d($"<color=#ffff00>[Server]:Join({HostName}:{Port}).</color>");
 			}
 		}
@@ -71,7 +81,10 @@ namespace Flex.Net.Sockets
 			base.Close();
 
 			if (connections.Contains(this)) {
-				connections.Remove(this);
+				lock (connections) {
+					connections.Remove(this);
+				}
+
 				Log.d($"<color=#ffff00>[Server]:Exit({HostName}:{Port}).</color>");
 			}
 		}
